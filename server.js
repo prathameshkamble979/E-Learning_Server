@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // ✅ Local development
-      "https://your-frontend.onrender.com", // ✅ Replace with your actual Render frontend URL
+      "https://e-learning-frontend-xzia.onrender.com", // ✅ Replace with your actual Render frontend URL
       "https://www.paypal.com",
       "https://www.sandbox.paypal.com"
     ],
