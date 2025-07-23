@@ -19,7 +19,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
+      // "http://localhost:5173",
       "https://e-learning-client-k6ow.onrender.com",
       "https://www.paypal.com",
       "https://www.sandbox.paypal.com",
