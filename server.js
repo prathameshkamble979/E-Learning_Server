@@ -16,18 +16,60 @@ const allowedOrigins = [
 ];
 
 // ✅ Enhanced CORS middleware (no 'cors' package needed)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
   
+//   if (allowedOrigins.includes(origin)) {
+//     res.setHeader("Access-Control-Allow-Origin", origin);
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+//     res.setHeader("Access-Control-Allow-Credentials", "true");
+//     res.setHeader("Access-Control-Max-Age", "86400"); // Cache for 24 hours
+//   }
+
+//   // Immediately respond to OPTIONS preflight
+//   if (req.method === "OPTIONS") {
+//     return res.status(200).end();
+//   }
+
+//   next();
+// });
+
+// // ✅ Essential middleware
+// app.use(cookieParser());
+// app.use(express.json());
+
+// // ✅ Request logger (for debugging)
+// app.use((req, res, next) => {
+//   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
+//     origin: req.headers.origin,
+//     headers: req.headers
+//   });
+//   next();
+// });
+
+// // ✅ MongoDB connection
+// mongoose.connect(MONGO_URI)
+//   .then(() => console.log("✅ MongoDB connected"))
+//   .catch(err => console.error("❌ MongoDB connection failed:", err));
+
+// 1. Replace your CORS middleware with this:
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://e-learning-client-k6ow.onrender.com",
+    "https://e-learning-server-ss29.onrender.com"
+  ];
+  
+  const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Max-Age", "86400"); // Cache for 24 hours
+    res.header("Access-Control-Allow-Origin", origin); // Dynamic origin
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    res.header("Access-Control-Allow-Credentials", "true");
   }
 
-  // Immediately respond to OPTIONS preflight
+  // Immediately respond to OPTIONS requests
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -35,23 +77,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Essential middleware
-app.use(cookieParser());
-app.use(express.json());
-
-// ✅ Request logger (for debugging)
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
-    origin: req.headers.origin,
-    headers: req.headers
-  });
-  next();
-});
-
-// ✅ MongoDB connection
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB connection failed:", err));
+// 2. Add this before routes:
+app.options("/*", (req, res) => res.sendStatus(200)); // Explicit OPTIONS handler
 
 // ✅ Routes
 app.use("/auth", require("./routes/auth-routes/index"));
