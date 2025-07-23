@@ -31,7 +31,7 @@ app.use(
 );
 
 // Explicitly handle preflight requests
-app.options("*", cors());
+// app.options("*", cors());
 
 
 // Explicit CORS headers (only if needed, after cors())
