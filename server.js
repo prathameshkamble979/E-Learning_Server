@@ -20,7 +20,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://e-learning-frontend-xzia.onrender.com",
+      "https://e-learning-client-k6ow.onrender.com",
       "https://www.paypal.com",
       "https://www.sandbox.paypal.com",
     ],
