@@ -4,14 +4,9 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 
-// Routes
-const authRoutes = require("./routes/auth-routes/index");
-const mediaRoutes = require("./routes/instructor-routes/media-routes");
-const instructorCourseRoutes = require("./routes/instructor-routes/course-routes");
-const studentViewCourseRoutes = require("./routes/student-routes/course-routes");
-const studentViewOrderRoutes = require("./routes/student-routes/order-routes");
-const studentCoursesRoutes = require("./routes/student-routes/student-courses-routes");
-const studentCourseProgressRoutes = require("./routes/student-routes/course-progress-routes");
+// 🔐 Optional: Only load HTTPS modules and certs in development
+const fs = require("fs");
+const https = require("https");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,13 +19,13 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // ✅ Local development
-      "https://e-learning-frontend-xzia.onrender.com", // ✅ Replace with your actual Render frontend URL
+      "http://localhost:5173",
+      "https://e-learning-frontend-xzia.onrender.com",
       "https://www.paypal.com",
-      "https://www.sandbox.paypal.com"
+      "https://www.sandbox.paypal.com",
     ],
     methods: ["GET", "POST", "DELETE", "PUT"],
-    credentials: true, // ✅ allow cookies
+    credentials: true,
   })
 );
 
@@ -44,13 +39,13 @@ mongoose
   .catch((e) => console.log("❌ MongoDB connection error:", e));
 
 // ✅ Route Mounts
-app.use("/auth", authRoutes);
-app.use("/media", mediaRoutes);
-app.use("/instructor/course", instructorCourseRoutes);
-app.use("/student/course", studentViewCourseRoutes);
-app.use("/student/order", studentViewOrderRoutes);
-app.use("/student/courses-bought", studentCoursesRoutes);
-app.use("/student/course-progress", studentCourseProgressRoutes);
+app.use("/auth", require("./routes/auth-routes/index"));
+app.use("/media", require("./routes/instructor-routes/media-routes"));
+app.use("/instructor/course", require("./routes/instructor-routes/course-routes"));
+app.use("/student/course", require("./routes/student-routes/course-routes"));
+app.use("/student/order", require("./routes/student-routes/order-routes"));
+app.use("/student/courses-bought", require("./routes/student-routes/student-courses-routes"));
+app.use("/student/course-progress", require("./routes/student-routes/course-progress-routes"));
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {
@@ -61,7 +56,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-});
+// ✅ Start Server (HTTPS in development, HTTP in production)
+if (process.env.NODE_ENV === "development") {
+  const privateKey = fs.readFileSync("key.pem", "utf8");
+  const certificate = fs.readFileSync("cert.pem", "utf8");
+  const credentials = { key: privateKey, cert: certificate };
+
+  https.createServer(credentials, app).listen(PORT, () => {
+    console.log(`🔐 HTTPS Dev Server running at https://localhost:${PORT}`);
+  });
+} else {
+  app.listen(PORT, () => {
+    console.log(`🚀 Production server running on PORT ${PORT}`);
+  });
+}
