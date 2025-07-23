@@ -3,8 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-
-// 🔐 Optional: Only load HTTPS modules and certs in development
 const fs = require("fs");
 const https = require("https");
 
@@ -12,48 +10,54 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// ✅ Middleware to parse cookies
+// ✅ Cookie parser
 app.use(cookieParser());
 
-// ✅ CORS setup to allow cookies
-const cors = require("cors");
+// ✅ Allowed client URLs
+const allowedOrigins = [
+  "http://localhost:5173", // Local dev
+  "https://e-learning-client-k6ow.onrender.com", // Render client
+  "https://e-learning-frontend-nu.vercel.app" // Vercel client
+];
 
+// ✅ CORS Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://e-learning-client-k6ow.onrender.com"
-    ],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// Explicitly handle preflight requests
-//
+// ✅ JSON parser
+app.use(express.json());
 
-
-// Explicit CORS headers (only if needed, after cors())
+// ✅ Additional CORS headers (in case needed)
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://e-learning-frontend-nu.vercel.app");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
 
-
-// ✅ Parses incoming JSON payloads
-app.use(express.json());
-
-// ✅ DB Connection
+// ✅ DB connection
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB is connected"))
-  .catch((e) => console.log("❌ MongoDB connection error:", e));
+  .catch((e) => console.error("❌ MongoDB connection error:", e));
 
-// ✅ Route Mounts
+// ✅ Routes
 app.use("/auth", require("./routes/auth-routes/index"));
 app.use("/media", require("./routes/instructor-routes/media-routes"));
 app.use("/instructor/course", require("./routes/instructor-routes/course-routes"));
@@ -62,16 +66,13 @@ app.use("/student/order", require("./routes/student-routes/order-routes"));
 app.use("/student/courses-bought", require("./routes/student-routes/student-courses-routes"));
 app.use("/student/course-progress", require("./routes/student-routes/course-progress-routes"));
 
-// ✅ Global Error Handler
+// ✅ Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Something went wrong",
-  });
+  res.status(500).json({ success: false, message: "Something went wrong" });
 });
 
-// ✅ Start Server (HTTPS in development, HTTP in production)
+// ✅ Start server
 if (process.env.NODE_ENV === "development") {
   const privateKey = fs.readFileSync("key.pem", "utf8");
   const certificate = fs.readFileSync("cert.pem", "utf8");
