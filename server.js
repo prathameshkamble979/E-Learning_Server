@@ -11,7 +11,6 @@ const MONGO_URI = process.env.MONGO_URI;
 const allowedOrigins = [
   "http://localhost:5173",
   "https://e-learning-client-k6ow.onrender.com",
-  "https://e-learning-frontend-nu.vercel.app",
   "https://e-learning-server-ss29.onrender.com"
 ];
 
